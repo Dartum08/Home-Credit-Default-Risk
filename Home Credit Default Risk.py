@@ -219,9 +219,90 @@ app_test_poly = app_test.merge(poly_features_test, on = 'SK_ID_CURR', how = 'lef
 # Align the dataframes
 app_train_poly, app_test_poly = app_train_poly.align(app_test_poly, join = 'inner',
                                                      axis = 1)
+# Preprocessing steps
+
+from sklearn.preprocessing import MinMaxScaler, Imputer
+
+# Drop the target from the training data
+if 'TARGET' in app_train:
+    train = app_train.drop(columns = ['TARGET'])
+else:
+    train = app_train.copy()
+    
+# Feature names
+features = list(train.columns)
+
+# Copy of the testing data
+test = app_test.copy()
+
+# Median imputation of missing values
+imputer = Imputer(strategy = 'median')
+
+# Scale each feature to 0-1
+scaler = MinMaxScaler(feature_range = (0, 1))
+
+# Fit on the training data
+imputer.fit(train)
+
+# Transform both training and testing data
+train = imputer.transform(train)
+test = imputer.transform(app_test)
+
+# Repeat with the scaler
+scaler.fit(train)
+train = scaler.transform(train)
+test = scaler.transform(test)
+
+print('Training data shape: ', train.shape)
+print('Testing data shape: ', test.shape)
+
+# Logistic Regression
+
+from sklearn.linear_model import LogisticRegression
+
+# Make the model with the specified regularization parameter
+log_reg = LogisticRegression(C = 0.0001)
+
+# Train on the training data
+log_reg.fit(train, train_labels)
+
+# Make predictions
+# Make sure to select the second column only
+log_reg_pred = log_reg.predict_proba(test)[:, 1]
+
+# Submission dataframe
+submit = app_test[['SK_ID_CURR']]
+submit['TARGET'] = log_reg_pred
+submit.head()
+#The logistic regression baseline should score around 0.671 when submitted.
+
+## Random Forest
+from sklearn.ensemble import RandomForestClassifier
+
+# Make the random forest classifier
+random_forest = RandomForestClassifier(n_estimators = 100, random_state = 50, verbose = 1, n_jobs = -1)
+# Train on the training data
+random_forest.fit(train, train_labels)
+
+# Extract feature importances
+feature_importance_values = random_forest.feature_importances_
+feature_importances = pd.DataFrame({'feature': features, 'importance': feature_importance_values})
+
+# Make predictions on the test data
+predictions = random_forest.predict_proba(test)[:, 1]
+
+# Make a submission dataframe
+submit = app_test[['SK_ID_CURR']]
+submit['TARGET'] = predictions
+
+# Save the submission dataframe
+submit.to_csv('random_forest_baseline.csv', index = False)
+#This model should score around 0.678 when submitted.
 
 
 
+
+                      
 
 
 
