@@ -1,3 +1,5 @@
+# Step 2
+
 mis_val = app_train.isnull().sum()
 len(app_train)
 
