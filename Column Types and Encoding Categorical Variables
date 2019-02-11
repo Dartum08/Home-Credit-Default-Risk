@@ -1,3 +1,5 @@
+# Step 3
+
 # Number of unique classes in each object column
 app_train.select_dtypes('object').apply(pd.Series.nunique, axis=0)
 
