@@ -26,5 +26,3 @@ print('%d columns were label encoded.' % le_count)
 # one-hot encoding of categorical variables
 app_train = pd.get_dummies(app_train)
 app_test = pd.get_dummies(app_test)
-
-train_labels = app_train['TARGET']
